@@ -1,16 +1,21 @@
+# frozen_string_literal: true
+
 require 'rake'
 
-# TODO:
+# TODO
 # * phases: execute, remote_execute, install, build, etc.
-# * remote execution envionrment 
+# * remote execution envionrment
 
 module Ruke
+  # Pipeline Class
   class Pipeline
-    # include is needed to call rake task method 
+    # include is needed to call rake task method
     include Rake::DSL
+
     attr_accessor :install_commands, :name
-    def initialize()
-      @name = "nil"
+
+    def initialize
+      @name = 'nil'
       @install_commands = []
       yield self if block_given?
       ruke_init unless name.nil?
@@ -19,13 +24,28 @@ module Ruke
     # all starts here
     # ---------------
     def ruke_init
-      puts "[ruke_init]: define method has been called"
+      puts '[ruke_init]: define method has been called'
       ruke_installer
     end
+
     def ruke_installer
       desc "#{name} task"
       # default #{name} should go to the local installer_task
-      task name => "#{name}:installer_task"
+      task name => "Ruke:#{name}:installer_task"
+      namespace "Ruke" do
+        namespace name do
+          task :installer_task do
+            puts "This is default task for rake file name: [#{name}].."
+            ruke_installer_executor
+          end
+        end
+      end
+    end
+
+    def ruke_dependson(dep)
+      desc "#{name} task"
+      # default #{name} should go to the local installer_task
+      task name => "Ruke:#{name}:installer_task"
       namespace name do
         task :installer_task do
           puts "This is default task for rake file name: [#{name}].."
@@ -33,14 +53,22 @@ module Ruke
         end
       end
     end
+
     def ruke_installer_executor
       install_commands.each do |inst|
         puts "executing: [#{inst}]"
-        ruke_executor("#{inst}")
+        ruke_executor(inst.to_s)
       end
     end
+
     def ruke_executor(cmd)
       system(cmd)
+    end
+
+    def ruke_list_all_tasks
+      task_names = Rake.application.tasks.map(&:name)
+      puts "Tasks:"
+      task_names.each { |name| puts "  - #{name}" }
     end
 
     # ----------------------------------
@@ -56,7 +84,7 @@ module Ruke
       # end
 
       task :inblock do
-        puts "Called task in a block.."
+        puts 'Called task in a block..'
       end
     end
 
@@ -67,14 +95,14 @@ module Ruke
     # task = self.call_task_in_block
     # Rake.application.options.trace = true
     # Rake.application.invoke_task(task)
-    
+
     # ----------------------------------
     # 2) define the task inline
     # to run it: bundle exec bin/console
     # ----------------------------------
-    name = "inline_task"
+    name = 'inline_task'
     task = Rake::Task.task_defined?(name) ? Rake::Task[name] : Rake::Task.define_task(name) do
-      puts "Called inline task.."
+      puts 'Called inline task..'
     end
     # uncomment to execute
     # Rake.application.invoke_task(name)
