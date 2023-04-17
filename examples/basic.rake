@@ -3,11 +3,11 @@ require_relative '../lib/ruke'
 # watch -n 1 "rake -f examples/basic.rake" --tasks -A
 # watch -n 1 "rake -f examples/basic.rake" --trace
 Ruke::Pipeline.new do |r|
-    r.name = "basic_pipeline"
+    r.name = "basic"
     r.install_commands << "echo 'ls -alth'"
     r.install_commands << "echo 'cat /etc/hosts'"
-    task :default => r.name
+    # task :default => r.name
 end
 
 # list all generated tasks
-Ruke::Pipeline.new.ruke_list_all_tasks
+# Ruke::Pipeline.new.ruke_list_all_tasks

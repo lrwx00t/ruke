@@ -15,7 +15,7 @@ module Ruke
     attr_accessor :install_commands, :name
 
     def initialize
-      @name = 'nil'
+      @name = nil
       @install_commands = []
       yield self if block_given?
       ruke_init unless name.nil?
@@ -24,32 +24,40 @@ module Ruke
     # all starts here
     # ---------------
     def ruke_init
-      puts '[ruke_init]: define method has been called'
+      # puts '[ruke_init]: define method has been called'
       ruke_installer
     end
 
-    def ruke_installer
-      desc "#{name} task"
-      # default #{name} should go to the local installer_task
-      task name => "Ruke:#{name}:installer_task"
-      namespace "Ruke" do
-        namespace name do
-          task :installer_task do
-            puts "This is default task for rake file name: [#{name}].."
-            ruke_installer_executor
-          end
-        end
+    def define_download
+      task :installer_task do
+        puts "This is default task for rake file name: [#{name}].."
+        # call executor only when the task is called
+        ruke_installer_executor
       end
     end
 
+    def ruke_installer
+      namespace "Ruke" do
+        namespace name do
+          define_download
+
+          task :done => "Ruke:#{name}:installer_task"
+          task :default => "Ruke:#{name}:done"
+        end
+        task name => "#{name}:default"
+      end
+    end
+
+    # simple wrapper around Rake's import() method for loading .rake files
+    def load_recipes(*files)
+      files.flatten.each { |f| import f }
+    end
+
     def ruke_dependson(dep)
-      desc "#{name} task"
-      # default #{name} should go to the local installer_task
-      task name => "Ruke:#{name}:installer_task"
-      namespace name do
-        task :installer_task do
-          puts "This is default task for rake file name: [#{name}].."
-          ruke_installer_executor
+      Ruke::Pipeline.new.load_recipes Dir["./examples/#{dep}.rake"]
+      namespace 'Ruke' do
+        namespace name do
+          task :default => "Ruke:#{dep}:done"
         end
       end
     end
