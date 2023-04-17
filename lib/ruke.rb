@@ -54,10 +54,12 @@ module Ruke
     end
 
     def ruke_dependson(dep)
-      Ruke::Pipeline.new.load_recipes Dir["./examples/#{dep}.rake"]
+      # count deps?? TODO
+      # Ruke::Pipeline.new.load_recipes Dir["./examples/#{dep}.rake"]
+      load_recipes("./examples/#{dep}.rake")
       namespace 'Ruke' do
         namespace name do
-          task :default => "Ruke:#{dep}:done"
+          task :default => "Ruke:#{dep}"
         end
       end
     end
